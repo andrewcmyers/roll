@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Roll Interpreter</title>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <style>
+    body { font-family: sans-serif }
+    table tr td:first-child { font-family: Menlo, Courier, fixed }
+    code { font-family: Menlo, Courier, fixed; font-weight: bold }
+  </style>
+
+</head>
+<body>
+
+<h1>The Roll Language</h1>
+<p>The Roll language is a functional language.&nbsp; When the
+interpreter (in evaluate mode) reads an expression in Roll, it computes a
+possible value and prints the output.&nbsp; Possible expressions <i
+class="math">exp</i> include the following:  </p>
+
+<table border="0" width="100%" cellspacing="3" cellpadding="3">
+  <tr>
+    <td width="18%" valign="top"><i>(any positive integer literal)</i></td>
+    <td width="82%" valign="top">Examples: 3, 5, 2.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><i>(a literal bag of values)</i></td>
+    <td width="82%" valign="top">Examples: {3,4,2}, {1,2,3,4,5,6}, {}, {4}</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><code>d</code> <i class="math"> exp</i> </td>
+    <td width="82%" valign="top"><i>d</i> is the fundamental expression in
+    Roll.&nbsp; <code>d</code><i class="math">n</i> means roll an <i
+    class="math"> n</i>-sided die and return the result.&nbsp; For example,
+    <code>d6</code> evaluates to any of the integers 1&ndash;6.&nbsp; The
+    expression after <code>d</code> need not be an integer, but it should
+    evaluate to an integer; for example, <code>d(d6)</code> is a valid
+    expression.&nbsp; To compute this expression, the interpreter will roll
+    a six-sided die to get a value n, then roll an n-sided die and return
+    the result.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"> <i class="math">exp</i>  <code> #</code> <i class="math"> exp</i> </td>
+    <td width="82%" valign="top"><i>#</i> is the &quot;<i class="math">n</i>
+    times&quot; operator.&nbsp; The interpreter evaluates the first
+    expression to get an integer <i class="math">n</i>.&nbsp; Then it
+    evaluates the second expression n times and unions the result into a
+    single bag of integers.&nbsp; For example, 3#d6 rolls 3 six-sided dice
+    and returns a bag containing the results.<br><br>
+
+    Evaluation of this expression will always result in bags of integers; it
+    will never result in bags of bags. For example, 3#(2#d6) is equivalent
+    to 6#d6.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"> <i class="math">exp</i>  <code>++</code> <i class="math"> exp</i> </td>
+    <td width="82%" valign="top">The result of this is the union of the two
+    subexpressions.&nbsp; For example, <code> (2#d4)@(3#d6)</code> returns
+    the value from rolling 2 four-sided dice and 3 six-sided dice. Both
+    expressions should evalutate to bags; 2 @ (2#d12) should cause a Runtime
+    error.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"> <i class="math">exp</i>  <code> +</code> <i class="math">exp</i> </td>
+    <td width="82%" valign="top">This expression acts differently depending
+    on the results of the subexpressions.&nbsp; If both of the operands are
+    integers, it computes the sum of the two integers.&nbsp; If one operand
+    is an integer and the other is a bag, it adds the integer value to each
+    element of the bag and returns the result.&nbsp;It is a run-time type
+    error for both operands to be bags.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><code>sum</code> <i class="math"> exp</i> </td>
+    <td width="82%" valign="top">If the subexpression is a bag, the result
+    is to sum the elements of the bag.&nbsp; If it is an integer, this
+    expression returns that integer.&nbsp; So, <code> sum(3#d6)</code> would
+    return the sum of 3 six-sided dice.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><code>count</code> <i class="math"> exp</i> </td>
+    <td width="82%" valign="top">Similar to sum, but it returns the number
+    of elements in the subexpression.&nbsp; If the subexpression is an
+    integer, it returns 1.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><code>min</code> <i class="math"> exp</i> <i class="math"> exp</i> </td>
+    <td width="82%" valign="top">Given operands <i class="math">n</i>  and
+    <i class="math">b</i> respectively, returns the least <i class="math">
+    n</i> elements of <i class="math">b</i>.&nbsp; <i class="math">b</i>
+    must be a bag.&nbsp; An example is <code>min 2 (3#d6)</code>, which rolls
+    3 six-sided dice and returns the two least values rolled.</td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><code>let</code> <i class="math">id</i>=<i class="math">exp</i>
+      <code> in</code> <i class="math"> exp</i>  <code> end</code></td>
+    <td width="82%" valign="top">Binds the result of evaluating the first
+    subexpression to the identifier <i class="math">id</i> and uses the
+    binding to evaluate the second subexpression.&nbsp; Identifiers start
+    with a letter and consist of letters, underscores, and primes.&nbsp;
+    For example, <code>let x = d6 in x+x end</code> will roll a six-sided
+    die and double the result.&nbsp; Notice that the d6 in this expression
+    is evaluated only once.</td>
+  </tr>
+  <tr>
+      <td width="18%" valign="top"><code>if</code> <i class="math"> exp</i>  <i class="math">  relop</i>  <i class="math"> exp</i><br>
+          <code> then</code> <i class="math"> exp</i><br><code> else</code> <i class="math">exp</i> </td>
+    <td width="82%" valign="top">Very similar to the ML
+    <code>if/then/else</code> expression.&nbsp; If the conditional returns
+    true, returns the result of evaluating the first expression, otherwise
+    returns the result of evaluating the second expression. For example,
+    <code>if d6 &lt; 4 then d4 else d5</code>: Roll a 6-sided dice. If the
+    result is less than 4, then roll a 4-sided dice else roll a 5-sided
+    dice. The list of relational operators is mentioned below.  Note: since
+    each element of the test is parsed separately, it is NOT possible to
+    put parentheses around the comparison as in <code>if (exp op exp) then
+	...</code>. Relational operators <i class="math"> relop</i>   may be any of <code>&lt;</code>,
+      <code>&lt;=</code>, <code>=</code>, <code>!=</code>, <code>&gt;=</code>, <code>&gt; &nbsp;</code></td>
+  </tr>
+  <tr>
+    <td width="18%" valign="top"><code>filter</code> <i class="math"> relop</i>  <i class="math"> exp</i>
+      <i class="math"> exp</i>  &nbsp;</td>
+    <td width="82%" valign="top">filter <i class="math"> op</i>
+ <i class="math"> e1</i>
+ <i class="math"> e2</i>
+ will perform the
+    following:&nbsp; evaluate <i class="math"> e1</i>
+ and <i class="math"> e2</i>
+ to get result <i class="math"> v1</i>
+ and <i class="math">v2</i>.&nbsp; <i class="math">v1</i>
+    must be an integer; <i class="math"> v2</i>
+ must be a bag.&nbsp; Then compute (<i class="math">v1</i>
+ <i class="math"> op v</i>) for
+    each element <i class="math"> v</i>
+ of bag <i class="math"> v2</i>
+ and return the bag with all elements for which (<i class="math">v1</i>
+ <i class="math"> op</i>
+ <i class="math">v</i>) evaluated to true.
+    <br><br>
+    This is easiest to see with an example.&nbsp; <code>filter &lt; 4 3#d6</code> will
+    roll 3 six-sided dice and return any values greater than or equal to
+    4.&nbsp; If the <code>3#d6</code> evaluates to {1,2,6}, the result will be
+    {6}.</td>
+  </tr>
+</table>
+
+<p>You should experiment with the interpreter to get a feel for the language
+syntax.&nbsp; At the command prompt, enter <code>parse</code> to enter the
+parser mode where the expressions are parsed and displayed but not
+evaluated. Use this mode to familiarize yourself with the abstract syntax tree that will be passed in as input to the eval functions.
+  </p>
+
+<p>
+Some sample dice expressions:
+<ul>
+    <li> <code> d6 </code> : Roll a 6 sided die
+    <li> <code> 2 # d6 </code> : Roll two 6 sided dice
+    <li> <code> d(d 6) </code> : Roll a 6 sided die to get '<i class="math">n</i>', and then role an
+      '<i class="math">n</i>' sided die
+    <li> <code> d(sum(2#d6)) </code> : Roll an '<i class="math">n</i>' sided die where n is the
+    sum of two six-sided die rolls.
+    <li> <code>if d6 &lt; 4 then 4 else 2#d4</code> Roll a d6, and if that
+    is less than 4 return 4, otherwise return a bag consisting of the results
+    of rolling 2 d4's.</li>
+    <li> <code>max 2 (3#d5)</code> : Return the largest 2 values after
+    rolling three five-sided dice.</li>
+    <li> <code> min 2 (3#(if d6 &lt; d6 then 1 else 2)) </code> : Roll
+    two dice. If the first is smaller, return 1 else 2. Do this three times
+    and select the lowest two values.
+</ul>
+
+Errors in dice expressions:
+<ul>
+    <li> <code>(2#d6) # d6</code> : Error. First argument to # must be an int.
+    <li> <code>d(2#d6)</code> : Error. Argument to <code>d</code> should be an int.
+    <li> <code>min 2 5</code> : Error. Second argument to min should be a bag.
+    <li> <code>min 2 d5</code> : Error. Second argument to min should be a bag.
+    <li> <code>(2#d6) + (2#d6)</code> : Error. Cannot add two bags.
+    <li> <code>let x = d6 in x + y end</code> : Error. Unbound identifier y.
+</ul>
+<h2>Modes and Commands</h2>
+
+<p>Roll expressions are evaluated in the current mode. There are three different modes,
+<code>eval</code>, <code>dist</code>, and <code>sample</code>.</p>
+
+<ul>
+    <li> <code>eval</code> mode - evaluates the expression and returns a
+    single result.
+
+    <li> <code>dist</code> mode - evaluates the expression, but this time
+    instead of giving out a single result, returns all possible values of
+    the expression, with their frequency distribution.</li>
+
+    <li> <code>sample</code> mode - evaluates the expression multiple times
+    and returns all of the results. Run with a large enough sample size, the
+    frequency of certain results should approach those returned in
+    <code>dist</code> mode.</li>
+</ul>
+
+<p> To view the current mode, type <code>mode</code> at the interpreter
+prompt. To switch modes, type <code>eval</code>, <code>dist</code>, or
+<code>sample</code>, depending on which mode you wish to switch to. The
+interpreter starts in <code>eval</code> mode. Typing <code>help</code> gives
+you help on how to use the interpreter, and <code>q</code> quits the
+interpreter.</p>
+</body>
+</html>

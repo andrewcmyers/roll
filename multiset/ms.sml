@@ -1,0 +1,142 @@
+structure MultisetIneff :> MULTISET = struct
+		       (* *)
+  type 'a multiset = {elems:('a * int) list,
+                comp:('a * 'a -> order)}
+
+  exception NotFound
+  exception Empty
+
+  fun empty c = {elems=[],comp=c}
+
+  fun add (item, {elems, comp}) =
+    let
+      fun insert l =
+        case l of
+          [] => [(item,1)]
+        | (h,n)::t => (case comp(item,h) of
+                         LESS => (item,1)::l
+                       | EQUAL => (h,n+1)::t
+                       | GREATER => (h,n)::insert(t))
+    in
+      {elems=insert elems, comp=comp}
+    end
+
+  fun delete (item, {elems, comp}) =
+    let
+      fun remove l =
+        case l of
+          [] => raise NotFound
+        | (h,n)::t => (case comp(item,h) of
+                         LESS => raise NotFound
+                       | EQUAL => (if n>1 then (h,n-1)::t else t)
+                       | GREATER => (h,n)::remove(t))
+    in
+      {elems=remove elems, comp=comp}
+    end
+
+  fun fromList (elems, comp) = List.foldl add (empty comp) elems
+
+  fun toList {elems, comp} =
+    let
+      fun f ((e,num),list) = List.tabulate(num,fn _ => e) @ list
+    in
+     List.foldr f [] elems
+    end
+
+  fun isEmpty {elems, comp} = List.null elems
+
+  fun tabulate (n,f,c) = fromList (List.tabulate(n,f),c)
+
+  fun fold f acc {elems, comp} =
+    let
+      fun fold' acc list =
+        case list of
+          [] => acc
+        | (h,n)::t => if n>1 then fold' (f(h,acc)) ((h,n-1)::t)
+                         else fold' (f(h,acc)) t
+    in
+      fold' acc elems
+    end
+
+  fun frequency ({elems, comp}, item) =
+    case (List.find (fn(h,_) => comp(h,item) = EQUAL) elems) of
+      NONE => 0
+    | SOME(_,n) => n
+
+  fun member (multiset, item) = frequency(multiset,item) > 0
+
+  fun numItems {elems, comp} = List.foldl (fn((_,n), a) => n+a) 0 elems
+
+
+
+
+  fun union (ms1:'a multiset, ms2:'a multiset) =
+  let
+    fun add'((item,m),{elems,comp}) =
+    let
+      fun insert l =
+        case l of
+             [] => [(item,m)]
+           | (h,n)::t => (case comp(item,h) of
+                               LESS => (item,m)::l
+                             | EQUAL => (h,n+m)::t
+                             | GREATER => (h,n)::insert(t))
+    in
+      {elems=insert elems, comp=comp}
+    end
+
+
+    fun fold' f b l =
+      case l of
+           [] => b
+         | x::xs => fold' f (f(x,b)) xs
+  in
+    fold' add' ms1 (#elems ms2)
+  end
+
+  fun filter f (multiset as {elems,comp}) =
+    {elems= List.filter (fn(e,n) => f e) elems,
+    comp=comp}
+
+  fun map (f:'a->'a) (mset as {elems,comp}:'a multiset) =
+    {elems= List.map (fn(e,n) => (f e,n)) elems,
+    comp=comp}
+
+  fun map' (f:'a->'b) (comp':'b * 'b -> order )
+    (mset as {elems,comp}:'a multiset) =
+    {elems= List.map (fn(e,n) => (f e,n)) elems,
+    comp=comp'}
+
+  fun getfirst (elems:('a * int) list, n): ('a * int) list =
+    case (n,elems) of
+         (0, _) => []
+       | (_, []) => raise Empty
+       | (_, (h,n')::t) => if n'>=n then [(h,n)]
+                           else (h,n')::getfirst(t,n-n')
+
+  fun nMin n {elems, comp} = {elems=getfirst(elems,n),
+    comp=comp}: 'a multiset
+  fun nMax n {elems,comp} = {elems=rev (getfirst(rev elems,n)),
+    comp=comp}: 'a multiset
+
+  fun repOK (multiset as {elems,comp}: 'a multiset) =
+  let
+    fun nodupl list =
+      case list of
+           [] => true
+         | (e,_)::t => not(List.exists (fn(e',_) => comp(e,e')=EQUAL) t)
+         andalso nodupl t
+    fun prop_num list =
+      case list of
+           [] => true
+         | (_,n)::t => n>1 andalso prop_num t
+    fun prop_ord list =
+      case list of
+           ([] | (_::[])) => true
+         | ((e1,_)::(e2,n)::t) => comp(e1,e2)=LESS andalso
+         prop_ord((e2,n)::t)
+  in
+    if nodupl(elems) andalso prop_num(elems) andalso prop_ord(elems) then multiset
+    else raise Fail "Representation Invariant Not Maintained"
+  end
+end

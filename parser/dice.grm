@@ -1,0 +1,92 @@
+open AbSyn
+
+%%
+
+%name Dice
+%pos int
+
+%term KW_d
+    | KW_Sum
+    | KW_Count
+    | KW_Least | KW_Greatest
+    | KW_let | KW_in | KW_end
+    | KW_if | KW_then | KW_else
+    | KW_Filter
+    | LPAREN | RPAREN
+    | LBRACE | RBRACE
+    | COMMA
+    | PLUS
+    | MINUS
+    | TIMES
+    | DIV
+    | AT
+    | HASH
+    | NOTEQUAL | LESSEQUAL | GREATEREQUAL | EQUAL | LESS | GREATER
+    | ID of string
+    | INT of int
+    | EOF
+
+%nonterm Start of AbSyn.top
+       | Oper of AbSyn.oper
+       | Exp of AbSyn.exp
+       | IntSeq of int list
+       | Decl of AbSyn.decl
+
+%nonassoc KW_let KW_if KW_else
+%left EQUAL LESS GREATER GREATEREQUAL LESSEQUAL NOTEQUAL
+%nonassoc KW_Sum KW_Count KW_Least KW_Greatest KW_Filter
+%left AT
+%left PLUS MINUS
+%left TIMES DIV
+%right HASH
+%nonassoc KW_d
+%nonassoc LPAREN LBRACE ID INT
+
+%eop EOF
+%pure
+%start Start
+%verbose
+
+%%
+
+
+Start : Exp  (Expression Exp)
+      | Decl (Declaration Decl)
+
+Oper : EQUAL         (Equal)
+     | LESS          (Less)
+     | GREATER       (Greater)
+     | GREATEREQUAL  (GreaterEqual)
+     | LESSEQUAL     (LessEqual)
+     | NOTEQUAL      (NotEqual)
+
+Exp : INT                         (Int_e INT)
+    | LBRACE IntSeq RBRACE
+          (Bag_e (Multiset.fromList (IntSeq, Int.compare)))
+    | ID                          (Var_e ID)
+    | KW_d Exp                    (DieRoll_e Exp)
+    | Exp KW_d Exp                (Sum_e (NTimes_e (Exp1,(DieRoll_e Exp2))))
+    | Exp PLUS Exp                (Plus_e (Exp1, Exp2))
+    | MINUS Exp                   (Negative_e Exp) 
+    | Exp MINUS Exp               (Plus_e (Exp1, Negative_e Exp2))
+    | Exp TIMES Exp               (Times_e (Exp1, Exp2))
+    | Exp DIV Exp                 (Div_e (Exp1, Exp2))
+    | Exp AT Exp                  (Union_e (Exp1, Exp2))
+    | Exp HASH Exp                (NTimes_e (Exp1, Exp2))
+    | KW_Sum Exp                  (Sum_e Exp)
+    | KW_Count Exp                (Count_e Exp)
+    | KW_Least Exp Exp            (Least_e (Exp1, Exp2))
+    | KW_Greatest Exp Exp         (Greatest_e (Exp1, Exp2))
+    | KW_let ID EQUAL Exp KW_in Exp KW_end
+          (Let_e (ID, Exp1, Exp2))
+    | KW_if Exp Oper Exp KW_then Exp KW_else Exp
+          (If_e ((Exp1, Oper, Exp2), Exp3, Exp4))
+    | KW_Filter Oper Exp Exp
+          (Filter_e ((Oper, Exp1), Exp2))
+    | LPAREN Exp RPAREN           (Exp)
+
+Decl : ID EQUAL Exp        ((ID, Exp))
+
+IntSeq : INT COMMA IntSeq  (INT::IntSeq)
+       | INT               ([INT])
+       |                   ([])

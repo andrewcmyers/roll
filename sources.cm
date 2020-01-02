@@ -1,0 +1,38 @@
+Group is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/ml-yacc-lib.cm
+
+  (* Abstract Syntax Tree *)
+  ast/AbSyn.sml
+
+  (* Evaluator *)
+  eval/eval-sig.sml
+  eval/distrib-sig.sml
+  eval/sample-sig.sml
+  eval/Evaluator.sml
+  eval/Distribution.sml
+  eval/Sample.sml
+
+  (* Multiset interface *)
+  multiset/ms.sig
+  multiset/ms-ineff.sml
+  multiset/ms.sml
+  multiset/ms-eff.sml
+
+  (* Linear Congruential Multiplier
+  lcm/Random.sml
+  lcm/Warm.sml *)
+
+  (* Parser *)
+  parser/dice.lex
+  parser/dice.grm
+  parser/Parser.sml
+
+  (* Top-level interpreter *)
+  toplevel/Roll.sml
+  toplevel/Util.sml
+
+  (* Standalone executable *)
+  toplevel/Main.sml

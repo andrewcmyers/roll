@@ -1,0 +1,73 @@
+structure MultisetInefficient :> MULTISET = struct
+		       (* *)
+  type 'a multiset = {elems:'a list, comp:('a * 'a -> order)}
+
+  exception NotFound
+  exception Empty
+
+  fun empty c = {elems=[],comp=c}
+
+  fun add (item, {elems, comp}) =
+      {elems=item::elems, comp=comp}
+
+  fun delete (item, {elems, comp}) =
+    let
+      fun remove l =
+        case l of
+          [] => raise NotFound
+        | h::t => case comp(item,h) of
+                        EQUAL => t
+                      | _ => h::(remove t)
+    in
+      {elems=remove elems, comp=comp}
+    end
+
+  fun fromList (elems, comp) = List.foldl add (empty comp) elems
+
+  fun toList {elems, comp} = elems
+
+  fun isEmpty {elems, comp} = List.null elems
+
+  fun tabulate (n,f,c) = fromList (List.tabulate(n,f),c)
+
+  fun fold f acc {elems, comp} =
+      List.foldl f acc elems
+
+  fun frequency ({elems, comp}:'a multiset, item:'a) =
+    List.foldl (fn (h,b) => b+(if comp(h,item) = EQUAL then 1 else 0)) 0 elems
+
+
+  fun member (multiset, item) = frequency(multiset,item) > 0
+
+  fun numItems {elems, comp} = List.length elems
+
+  fun union (ms1, ms2) = fold add ms1 ms2
+
+  fun filter f (multiset as {elems,comp}) =
+    {elems= List.filter (fn e => f e) elems,
+     comp=comp}
+
+  fun map (f:'a->'a) (mset as {elems,comp}:'a multiset) =
+    {elems= List.map f elems,
+     comp=comp}
+
+  fun map' (f:'a->'b) (comp':'b * 'b -> order )
+           (mset as {elems,comp}:'a multiset) =
+    {elems= List.map f elems,
+     comp=comp'}
+
+  fun insert comp (x, l) =
+    case l of [] => [x]
+       | h::t => if comp(h,x) = LESS then h::(insert comp (x,t))
+                 else x::h::t
+
+  fun inSort (comp,l) = foldl (insert comp) [] l
+
+  fun nMin n {elems, comp} = {elems=List.take (inSort(comp,elems),n),
+                              comp=comp}: 'a multiset
+  fun nMax n {elems,comp} = {elems=List.take (inSort(comp,elems),List.length
+    elems - n),
+                             comp=comp}: 'a multiset
+
+  fun repOK (multiset as {elems,comp}: 'a multiset) = multiset
+end
