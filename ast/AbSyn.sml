@@ -66,26 +66,26 @@ structure AbSyn = struct
           val pp = pp (d+2)
         in
           case e of
-            Int_e i => pd ("Int_e "^(Int.toString i))
-          | Bag_e l => pd ("Bag_e "^(bagToString (Multiset.toList l)))
-          | Var_e id => pd ("Var_e "^id)
-          | DieRoll_e e' => (pd "DieRoll_e ("; pp e'; pd ")")
-          | Plus_e (e1,e2) => (pd "Plus_e ("; pp e1; pp e2; pd ")")
-          | Times_e (e1,e2) => (pd "Times_e ("; pp e1; pp e2; pd ")")
-          | Div_e (e1,e2) => (pd "Div_e ("; pp e1; pp e2; pd ")")
-	  | Negative_e e => (pd "Negative_e ("; pp e; pd ")")
-          | Union_e (e1,e2) => (pd "Union_e ("; pp e1; pp e2; pd ")")
-          | NTimes_e (e1,e2) => (pd "NTimes_e ("; pp e1; pp e2; pd ")")
-          | Sum_e e' => (pd "Sum_e ("; pp e'; pd ")")
-          | Count_e e' => (pd "Count_e ("; pp e'; pd ")")
-          | Least_e (e1,e2) => (pd "Least_e ("; pp e1; pp e2; pd ")")
-          | Greatest_e (e1,e2) => (pd "Greatest_e ("; pp e1; pp e2; pd ")")
-          | Let_e (id,e1,e2) => (pd ("Let_e ("); pd2 id; pp e1; pp e2; pd ")")
+            Int_e i => pd (Int.toString i)
+          | Bag_e l => pd ("Bag "^(bagToString (Multiset.toList l)))
+          | Var_e id => pd ("Var "^id)
+          | DieRoll_e e' => (pd "DieRoll ("; pp e'; pd ")")
+          | Plus_e (e1,e2) => (pd "Plus ("; pp e1; pp e2; pd ")")
+          | Times_e (e1,e2) => (pd "Times ("; pp e1; pp e2; pd ")")
+          | Div_e (e1,e2) => (pd "Div ("; pp e1; pp e2; pd ")")
+	  | Negative_e e => (pd "Negative ("; pp e; pd ")")
+          | Union_e (e1,e2) => (pd "Union ("; pp e1; pp e2; pd ")")
+          | NTimes_e (e1,e2) => (pd "Repeat ("; pp e1; pp e2; pd ")")
+          | Sum_e e' => (pd "Sum ("; pp e'; pd ")")
+          | Count_e e' => (pd "Count ("; pp e'; pd ")")
+          | Least_e (e1,e2) => (pd "Min ("; pp e1; pp e2; pd ")")
+          | Greatest_e (e1,e2) => (pd "Max ("; pp e1; pp e2; pd ")")
+          | Let_e (id,e1,e2) => (pd ("Let ("); pd2 id; pp e1; pp e2; pd ")")
           | If_e ((e1,oper,e2),e3,e4) =>
-              (pd "If_e ("; pp e1; pd2 (opToString oper); pp e2;
+              (pd "If ("; pp e1; pd2 (opToString oper); pp e2;
                             pp e3; pp e4; pd ")")
           | Filter_e ((oper,e1),e2) =>
-              (pd "Filter_e ("; pd2 (opToString oper); pp e1; pp e2; pd ")")
+              (pd "Filter ("; pd2 (opToString oper); pp e1; pp e2; pd ")")
         end
     in
       pp 0 e

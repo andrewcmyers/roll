@@ -7,4 +7,4 @@ then
     echo "Please install rlwrap"
     rlwrap=""
 fi
-$rlwrap /usr/local/smlnj/bin/sml @SMLload="$executable"
+$rlwrap /usr/local/smlnj/bin/sml @SMLload="$executable" $@
