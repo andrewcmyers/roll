@@ -132,11 +132,13 @@ structure Evaluator :> EVALUATOR = struct
                  Int_v(v) => Int_v(v)
                | Bag_v(v) => Int_v(Multiset.fold op+ 0 v))
        | Union_e(e1,e2) =>
-           (case (eval e1, eval e2) of
-                 (Bag_v x,Bag_v y) => Bag_v(Multiset.union(x,y))
-               | _ => raise RuntimeError)
+           Bag_v(Multiset.union(evalToBag(e1), evalToBag(e2)))
        | Var_e(id) => raise RuntimeError
     )
+    and evalToBag(e) = case eval e of
+        Bag_v b => b
+    | Int_v i => Multiset.fromList([i], Int.compare)
+
 
 end
 
