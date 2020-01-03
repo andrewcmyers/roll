@@ -11,6 +11,9 @@ Some sample dice expressions:
   of rolling 2 d4's.
 - `max 2 (3#d5)` : Return the largest 2 values after
   rolling three five-sided dice.
-- min 2 (3#(if d6 < d6 then 1 else 2)) : Roll
+- `6#sum max 3 4#d6` : Do the following six times and return
+  each result: roll 4 six-sided dice and sum the 3 largest.
+  rolling three five-sided dice.
+- `min 2 (3#(if d6 < d6 then 1 else 2))` : Roll
   two dice. If the first is smaller, return 1, else 2. Do this three times
   and select the lowest two values.
