@@ -1,16 +1,14 @@
 structure Roll = struct
 
-  structure A = AbSyn
   structure E = Evaluator
   structure S = Sample
   structure D = Distribution
   structure P = Parser
   structure U = Util
+  
+  open AbSyn
 
   datatype mode_type = EVAL | DIST | SAMPLE | PARSE
-
-  type exp = AbSyn.exp
-  type decl = AbSyn.decl
 
   val sampleSize = 100000
 
@@ -49,21 +47,55 @@ structure Roll = struct
         )
 
       (* Evaluates and prints result *)
-      fun eval(e: AbSyn.exp) : unit = (
+      fun eval(e: exp) : unit = (
         print ((U.prettyPrintValue (E.eval e))^"\n")
 	)
 
       (* Gets distribution and prints it *)
-      fun dist(e : AbSyn.exp) : unit =
+      fun dist(e : exp) : unit =
         print ((U.prettyPrintValueBag (D.eval e))^"\n")
 
       (* Samples distribution and prints it *)
-      fun sample(e : AbSyn.exp) : unit =
+      fun sample(e : exp) : unit =
         print ((U.prettyPrintValueBag
                     (S.eval (sampleSize, e)))^"\n")
 
       (* Parses and pretty-prints an expression *)
-      fun parse(e: AbSyn.exp) : unit = A.ppExp e
+      fun parse(e: exp) : unit = ppExp e
+
+      (* Substitute one definition id=e1 into e2. *)
+      fun subst_exp(e1, id, e2):exp = (
+       case e2 of
+         Count_e(e) => Count_e(subst_exp(e1,id,e))
+       | Sum_e(x) => Sum_e(subst_exp(e1,id,x))
+       | DieRoll_e(e) => DieRoll_e(subst_exp(e1,id,e))
+       | Filter_e((oper,x),y) => Filter_e((oper,subst_exp(e1,id,x)),subst_exp(e1,id,y))
+       | If_e((x,oper,y),a,b) =>
+           If_e((subst_exp(e1,id,x),oper,subst_exp(e1,id,y)),subst_exp(e1,id,a),subst_exp(e1,id,b))
+       | Int_e(x) => e2
+       | Bag_e(x) => e2
+       | Least_e(x,y) => Least_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+       | Greatest_e(x,y) => Greatest_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+       | Let_e(id',x,y) => (
+           if id' = id then Let_e(id',subst_exp(e1,id,x),y)
+           else Let_e(id',subst_exp(e1,id,x),subst_exp(e1,id,y))
+        )
+       | NTimes_e(x,y) => NTimes_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+       | Plus_e(x,y) => Plus_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+       | Times_e(x,y) => Times_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+       | Var_e(id2) => if id2 = id then e1 else Var_e(id2)
+       | Negative_e(x) => Negative_e(subst_exp(e1,id,x))
+       | Div_e(x,y) => Div_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+       | Union_e(x,y) => Union_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+      )
+
+      (* Substitute all definitions in defns appearing in e. *)
+      fun subst_defns (defs:decl list) (e:exp) : exp = (
+        case defs of
+          [] => e
+        | (id, e2) :: rest =>
+            subst_defns rest (subst_exp (e2, id, e))
+      )
 
     in
 	if input = "q\n" orelse input = "quit\n" orelse input = "" then ()
@@ -82,13 +114,19 @@ structure Roll = struct
 		| ("parse\n", _) => (print "Parse mode\n"; PARSE)
 		| ("help\n", _) => (printDirectives(); mode)
                 | _ => case P.parseString(input) of
-                          AbSyn.Declaration (id, exp) => (print (id ^ " is defined.\n"); mode)
-                        | AbSyn.Expression e => (
-                            case mode of 
-                              EVAL => (eval e; mode)
-                            | DIST => (dist e; mode)
-                            | SAMPLE => (sample e; mode)
-                            | PARSE => (parse e; mode)
+                          Declaration (x, e) => (
+                            defns := (x, e) :: !defns;
+                            print (x ^ " is defined.\n");
+                            mode
+                          )
+                        | Expression e => (
+                            let val e2 = subst_defns (!defns) e in
+                              case mode of 
+                                  EVAL => (eval e2; mode)
+                                | DIST => (dist e2; mode)
+                                | SAMPLE => (sample e2; mode)
+                                | PARSE => (parse e2; mode)
+                            end
                         )
 		) handle
 		    (P.ParseError | E.RuntimeError | D.RuntimeError) =>

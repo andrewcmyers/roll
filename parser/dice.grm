@@ -31,6 +31,7 @@ open AbSyn
        | Exp of AbSyn.exp
        | IntSeq of int list
        | Decl of AbSyn.decl
+       | Long_Id of string
 
 %nonassoc KW_let KW_if KW_else
 %left EQUAL LESS GREATER GREATEREQUAL LESSEQUAL NOTEQUAL
@@ -63,7 +64,7 @@ Oper : EQUAL         (Equal)
 Exp : INT                         (Int_e INT)
     | LBRACE IntSeq RBRACE
           (Bag_e (Multiset.fromList (IntSeq, Int.compare)))
-    | ID                          (Var_e ID)
+    | Long_Id                     (Var_e Long_Id)
     | KW_d Exp                    (DieRoll_e Exp)
     | Exp KW_d Exp                (Sum_e (NTimes_e (Exp1,(DieRoll_e Exp2))))
     | Exp PLUS Exp                (Plus_e (Exp1, Exp2))
@@ -85,7 +86,10 @@ Exp : INT                         (Int_e INT)
           (Filter_e ((Oper, Exp1), Exp2))
     | LPAREN Exp RPAREN           (Exp)
 
-Decl : ID EQUAL Exp        ((ID, Exp))
+Long_Id : ID                      (ID)
+        | Long_Id ID              (Long_Id ^ " " ^ ID)
+
+Decl : Long_Id EQUAL Exp        ((Long_Id, Exp))
 
 IntSeq : INT COMMA IntSeq  (INT::IntSeq)
        | INT               ([INT])

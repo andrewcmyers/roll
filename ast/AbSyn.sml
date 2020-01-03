@@ -8,7 +8,6 @@ structure AbSyn = struct
 
   datatype value = Int_v of int | Bag_v of int bag
 
-
   datatype exp = Int_e of int
                | Bag_e of int bag (* [int, int, int] *)
                | Var_e of id
