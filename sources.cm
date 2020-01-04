@@ -17,8 +17,6 @@ Group is
 
   (* Multiset interface *)
   multiset/ms.sig
-  multiset/ms-ineff.sml
-  multiset/ms.sml
   multiset/ms-eff.sml
 
   (* Linear Congruential Multiplier

@@ -24,6 +24,7 @@ structure Keywords =
            ("let", Tokens.KW_let),
            ("in", Tokens.KW_in),
            ("end", Tokens.KW_end),
+           ("compare", Tokens.KW_compare),
            ("if", Tokens.KW_if),
            ("then", Tokens.KW_then),
            ("else", Tokens.KW_else),

@@ -5,7 +5,7 @@ structure Distribution :> DISTRIBUTION = struct
   structure E = Evaluator
   structure MS = Multiset
 
-  exception RuntimeError;
+  exception RuntimeError of string;
 
   fun evalOper(v1,oper) (v2) =
     case (v1,oper,v2) of
@@ -15,7 +15,7 @@ structure Distribution :> DISTRIBUTION = struct
        | (Int_v x,GreaterEqual,Int_v y) => x >= y
        | (Int_v x,LessEqual,Int_v y) => x <= y
        | (Int_v x,NotEqual,Int_v y) => x <> y
-       | _ => raise RuntimeError
+       | _ => raise RuntimeError "Invalid comparison"
 
   fun add1 a = a+1
 
@@ -47,7 +47,7 @@ structure Distribution :> DISTRIBUTION = struct
                           (case Int.compare(x,y) of
                                EQUAL => comp(xs,ys)
                              | res => res)
-                      |   _ => raise Fail "error in comparsion!"
+                      |   _ => raise Fail "error in comparison!"
                 in
                   comp(x',y')
                 end
@@ -107,6 +107,8 @@ structure Distribution :> DISTRIBUTION = struct
     ans
   end
 
+  val emptyBag = Bag_v(Multiset.empty Int.compare)
+
   fun eval(e:AbSyn.exp):AbSyn.value AbSyn.bag =
     case e of
          Count_e(e) =>
@@ -127,12 +129,12 @@ structure Distribution :> DISTRIBUTION = struct
                 case x of
                      Int_v(y) =>
                       if y < 1
-                      then raise RuntimeError
+                      then raise RuntimeError "Die number must be positive"
                       else
                          foldl (fn (z,b) => MS.add(Int_v z,b))
                                emptyMset
                                (List.tabulate(y,fn x => x+1))
-                   | Bag_v(_) => raise RuntimeError)
+                   | Bag_v(_) => raise RuntimeError "Die nunber cannot be a bag")
               (MS.toList(v))
            in
              adjUnion(runs)
@@ -154,12 +156,12 @@ structure Distribution :> DISTRIBUTION = struct
              MS.fold
                (fn (x,b) =>
                  case x of
-                   Bag_v(_) => raise RuntimeError
+                   Bag_v(_) => raise RuntimeError "Cannot compare bags in if (LHS)"
                  | Int_v(_) =>
                      MS.fold
                        (fn (y,b) =>
                          case x of
-                           Bag_v(_) => raise RuntimeError
+                           Bag_v(_) => raise RuntimeError "Cannot compare bags in if (RHS)"
                          | Int_v(_) =>
                              if evalOper(x,oper) y
                              then MS.union(s3',b)
@@ -243,7 +245,7 @@ structure Distribution :> DISTRIBUTION = struct
                     Int_v(n) => nCartProd n
                                 (MS.add(Bag_v(MS.empty Int.compare),emptyMset))
                                 v2
-                  | Bag_v(_) => raise RuntimeError)
+                  | Bag_v(_) => raise RuntimeError "Repetition count cannot be a bag")
                (MS.toList(v1))
            in
              adjUnion(runs)
@@ -295,7 +297,7 @@ structure Distribution :> DISTRIBUTION = struct
                                emptyMset e2',b))
              emptyMset e1'
            end
-       | Var_e(id') => raise RuntimeError
+       | Var_e(id) => raise RuntimeError ("Undefined: " ^ id)
 
 end
 

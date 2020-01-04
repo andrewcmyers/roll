@@ -79,6 +79,7 @@ structure Roll = struct
      | NTimes_e(x,y) => NTimes_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
      | Plus_e(x,y) => Plus_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
      | Times_e(x,y) => Times_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+     | Compare_e(x,oper,y) => Compare_e(subst_exp(e1,id,x), oper, subst_exp(e1,id,y))
      | Var_e(id2) => if id2 = id then e1 else Var_e(id2)
      | Negative_e(x) => Negative_e(subst_exp(e1,id,x))
      | Div_e(x,y) => Div_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
@@ -109,10 +110,11 @@ structure Roll = struct
           | PARSE => (parse e2; mode)
           | QUIT => mode
         end
-      ) handle
-          (P.ParseError | E.RuntimeError | D.RuntimeError) =>
-              (print "Error\n"; mode)
-          | Fail s => (print ("Exception Fail \""^s^"\"\n"); mode)
+      )
+      handle E.RuntimeError msg => (print("Error: " ^ msg ^ "\n"); mode)
+           | D.RuntimeError msg => (print("Error: " ^ msg ^ "\n"); mode)
+           | P.ParseError => mode
+           | Fail s => (print ("Exception Fail \""^s^"\"\n"); mode)
 
     fun loadFile(filename) : unit =
       let val inp = TextIO.openIn(filename)

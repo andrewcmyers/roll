@@ -1,29 +1,31 @@
-structure Multiset:> MULTISET = struct
-		       (* *)
+structure Multiset :> MULTISET = struct
 
-  structure List = List;
-  datatype 'a tree = LEAF | TREE of {left: 'a tree, data: 'a, right: 'a tree}
+  structure List = List
 
-  type 'a multiset = {elems:('a * int) tree,
-                comp:('a * 'a -> order)}
+  datatype 'a tree = EMPTY | NODE of {left: 'a tree, data: 'a, right: 'a tree}
+
+  type 'a elements = ('a * int) tree
+
+  type 'a multiset = {elems: 'a elements, comp:('a * 'a -> order)}
 
   (* Rep invariant: elements are stored in a binary search tree *)
 
   exception NotFound
   exception Empty
 
-  val emptyTree = LEAF
+  val emptyTree = EMPTY
 
   fun empty c = {elems=emptyTree, comp=c}
 
-  fun treeAdd(item, tree, comp) =
+(* TODO: balancing *)
+  fun treeAdd(item, tree: 'a elements, comp): 'a elements =
     case tree of
-         LEAF => TREE{left=LEAF,data=(item,1),right=LEAF}
-       | TREE{left,data=d as (data,n),right} => TREE(
+         EMPTY => NODE{left=EMPTY, data=(item,1), right=EMPTY}
+       | NODE{left,data=d as (data,n),right} => NODE(
            case comp(data,item) of
-                EQUAL =>  {left=left,data=(item,1 + n),right=right}
-              | LESS  =>  {left=left,data=d,right=treeAdd(item,right,comp)}
-              | GREATER => {left=treeAdd(item,left,comp),data=d,right=right})
+                EQUAL =>  {left=left, data=(item,1 + n), right=right}
+              | LESS  =>  {left=left, data=d, right=treeAdd(item,right,comp)}
+              | GREATER => {left=treeAdd(item,left,comp), data=d, right=right})
 
   fun add (item, {elems, comp}) = {elems=treeAdd(item,elems,comp),comp=comp}
 
@@ -31,22 +33,22 @@ structure Multiset:> MULTISET = struct
 
   fun fromList (elems, comp) = List.foldl add (empty comp) elems
 
-
-  fun isEmpty {elems, comp} = case elems of LEAF => true | _ => false
+  fun isEmpty {elems, comp} = case elems of EMPTY => true | _ => false
 
   fun tabulate (n,f,c) = fromList ((List.tabulate)(n,f),c)
 
   fun foldI f acc tree =
-    case tree of LEAF => acc
-       | TREE{left,data=(data,n),right} => foldI f (f((data,n),foldI f acc left)) right
+    case tree of
+         EMPTY => acc
+       | NODE{left, data, right} => foldI f (f (data, foldI f acc left)) right
 
   fun repeat n f a b =
     case n of 0 => b
        | _ => f(a,repeat (n-1) f a b)
 
   fun foldIWithRep f acc tree =
-    case tree of LEAF => acc
-       | TREE{left,data=(data,n),right} =>
+    case tree of EMPTY => acc
+       | NODE{left,data=(data,n),right} =>
          foldIWithRep f
          (repeat n f data (foldIWithRep f acc left)) right
 
@@ -57,8 +59,8 @@ structure Multiset:> MULTISET = struct
 
   fun treeFind(item,tree,comp) =
     case tree of
-         LEAF => NONE
-       | TREE{left,data=(data,n),right} =>
+         EMPTY => NONE
+       | NODE{left,data=(data,n),right} =>
        case comp(data,item) of
             EQUAL => SOME(n)
           | LESS => treeFind(item,right,comp)
@@ -75,8 +77,8 @@ structure Multiset:> MULTISET = struct
 
   fun treeAddN((item,k), tree, comp) =
     case tree of
-         LEAF => TREE{left=LEAF,data=(item,k),right=LEAF}
-       | TREE{left,data=d as (data,n),right} => TREE(
+         EMPTY => NODE{left=EMPTY,data=(item,k),right=EMPTY}
+       | NODE{left,data=d as (data,n),right} => NODE(
            case comp(data,item) of
                 EQUAL =>  {left=left,data=(item,k + n),right=right}
               | LESS  =>  {left=left,data=d,right=treeAddN((item,k),right,comp)}
@@ -84,15 +86,15 @@ structure Multiset:> MULTISET = struct
 
   fun treeUnion (t1, t2, comp) =
     case (t1, t2) of
-         ((LEAF, t) | (t, LEAF)) => t
-       | (TREE{left=l1, data=(d1,n1), right=r1},
-          TREE{left=l2, data=(d2,n2), right=r2}) =>
+         ((EMPTY, t) | (t, EMPTY)) => t
+       | (NODE{left=l1, data=(d1,n1), right=r1},
+          NODE{left=l2, data=(d2,n2), right=r2}) =>
             case comp(d1,d2) of
-              EQUAL => TREE{left=treeUnion(l1,l2,comp),
+              EQUAL => NODE{left=treeUnion(l1,l2,comp),
                             data=(d1,n1+n2),
                             right=treeUnion(r1,r2,comp)}
             | LESS => treeAddN((d2,n2),
-                   treeUnion(TREE{left=l1,
+                   treeUnion(NODE{left=l1,
                                   data=(d1,n1),
                                   right=treeUnion(r1,r2,comp)},l2,comp),comp)
             | GREATER => treeUnion(t2, t1, comp)
@@ -101,7 +103,17 @@ structure Multiset:> MULTISET = struct
   fun union ({elems=e1, comp=c1}, {elems=e2, comp=c2}) =
     {elems=treeUnion(e1,e2,c1),comp=c1}
 
-  fun filter f (multiset as {elems,comp}) = raise Fail "Unimplemented"
+  fun filter f (multiset:'a multiset as {elems, comp}) =
+    let val elems' = foldI
+        (fn (x, result) =>
+             if f (#1 x) then treeAddN(x, result, comp)
+                       else result
+           )
+        emptyTree
+        elems
+    in
+       {elems = elems', comp = comp}
+    end
 
   fun getfirst (elems:('a * int) list, n): ('a * int) list =
     raise Fail "Unimplemented"

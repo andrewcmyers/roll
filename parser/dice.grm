@@ -11,7 +11,7 @@ open AbSyn
     | KW_Least | KW_Greatest
     | KW_let | KW_in | KW_end
     | KW_if | KW_then | KW_else
-    | KW_Filter
+    | KW_Filter | KW_compare
     | LPAREN | RPAREN
     | LBRACE | RBRACE
     | COMMA
@@ -27,7 +27,7 @@ open AbSyn
     | EOF
 
 %nonterm Start of AbSyn.top
-       | Oper of AbSyn.oper
+       | Relop of AbSyn.oper
        | Exp of AbSyn.exp
        | IntSeq of int list
        | Decl of AbSyn.decl
@@ -36,8 +36,9 @@ open AbSyn
 
 %nonassoc KW_let KW_if KW_else
 %left EQUAL LESS GREATER GREATEREQUAL LESSEQUAL NOTEQUAL
-%nonassoc KW_Sum KW_Count KW_Least KW_Greatest KW_Filter
+%nonassoc KW_Sum KW_Count KW_Least KW_Greatest KW_Filter KW_in
 %left AT
+%nonassoc KW_compare
 %left PLUS MINUS
 %left TIMES DIV
 %right HASH
@@ -55,7 +56,7 @@ open AbSyn
 Start : Exp  (Expression Exp)
       | Decl (Declaration Decl)
 
-Oper : EQUAL         (Equal)
+Relop : EQUAL         (Equal)
      | LESS          (Less)
      | GREATER       (Greater)
      | GREATEREQUAL  (GreaterEqual)
@@ -69,6 +70,7 @@ Exp : INT                         (Int_e INT)
     | Exp KW_d Exp                (Sum_e (NTimes_e (Exp1,(DieRoll_e Exp2))))
     | Exp PLUS Exp                (Plus_e (Exp1, Exp2))
     | MINUS Exp                   (Negative_e Exp) 
+    | KW_compare Exp Relop Exp    (Compare_e(Exp1, Relop, Exp2))
     | Exp MINUS Exp               (Plus_e (Exp1, Negative_e Exp2))
     | Exp TIMES Exp               (Times_e (Exp1, Exp2))
     | Exp DIV Exp                 (Div_e (Exp1, Exp2))
@@ -76,19 +78,18 @@ Exp : INT                         (Int_e INT)
     | Exp HASH Exp                (NTimes_e (Exp1, Exp2))
     | KW_Sum Exp                  (Sum_e Exp)
     | KW_Count Exp                (Count_e Exp)
-    | KW_Least Exp Exp            (Least_e (Exp1, Exp2))
-    | KW_Greatest Exp Exp         (Greatest_e (Exp1, Exp2))
+    | KW_Least Exp KW_in Exp            (Least_e (Exp1, Exp2))
+    | KW_Greatest Exp KW_in Exp         (Greatest_e (Exp1, Exp2))
     | KW_let ID EQUAL Exp KW_in Exp KW_end
                                   (Let_e (ID, Exp1, Exp2))
-    | KW_if Exp Oper Exp KW_then Exp KW_else Exp
-                                  (If_e ((Exp1, Oper, Exp2), Exp3, Exp4))
-    | KW_Filter Oper Exp Exp
-                                  (Filter_e ((Oper, Exp1), Exp2))
+    | KW_if Exp Relop Exp KW_then Exp KW_else Exp
+                                  (If_e ((Exp1, Relop, Exp2), Exp3, Exp4))
+    | KW_Filter Exp Relop Exp     (Filter_e ((Relop, Exp1), Exp2))
     | LPAREN Exp RPAREN           (Exp)
 
 Exps : (* empty *)                (Bag_e(Multiset.fromList([], Int.compare)))
-     | Exp COMMA Exps             (Union_e(Exp, Exps))
-     | Exp                        (Exp)
+    | Exp COMMA Exps              (Union_e(Exp, Exps))
+    | Exp                         (Exp)
 
 Long_Id : ID                      (ID)
         | Long_Id ID              (Long_Id ^ " " ^ ID)
