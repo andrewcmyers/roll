@@ -54,8 +54,22 @@ structure Evaluator :> EVALUATOR = struct
 
   val emptyBag = Multiset.empty Int.compare
 
-  val now = Time.now()
-  val rnd = Random.rand (IntInf.toInt(Time.toSeconds(now)), IntInf.toInt(Time.toMicroseconds(now)))
+  val rnd : Random.rand option ref = ref NONE
+
+  fun getRandom() : Random.rand = (
+      case !rnd of
+        NONE =>
+            let val now = Time.now()
+                val r = Random.rand (IntInf.toInt(Time.toSeconds(now)),
+                                     IntInf.toInt(Time.toMicroseconds(now)))
+            in
+                rnd := SOME r;
+                r
+            end
+      | SOME r => r
+  )
+
+  fun dieRoll(n) = Random.randRange(1,n) (getRandom())
 
   fun eval(e:AbSyn.exp):AbSyn.value = (
      case e of
@@ -64,9 +78,9 @@ structure Evaluator :> EVALUATOR = struct
                Int_v(v) => Int_v(1)
              | Bag_v(v) => Int_v(Multiset.numItems v))
        | DieRoll_e(e1) =>
-           (case eval(e1) of
+           ( case eval(e1) of
                  Int_v(v) => if v < 1 then Bag_v(emptyBag)
-                                      else Int_v(Random.randRange(1,v) rnd)
+                                      else Int_v(dieRoll v)
                | Bag_v(v) => raise RuntimeError "Die number cannot be a bag")
        | Filter_e((oper,e1),e2) =>
            (case eval(e2) of

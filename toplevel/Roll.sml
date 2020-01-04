@@ -8,7 +8,7 @@ structure Roll = struct
   
   open AbSyn
 
-  datatype mode_type = EVAL | DIST | SAMPLE | PARSE | QUIT
+  datatype mode_type = INITIAL | EVAL | DIST | SAMPLE | PARSE | QUIT
 
   val sampleSize = 100000
 
@@ -25,10 +25,11 @@ structure Roll = struct
         print "\n";
         print "exp       Sample from, estimate, or calculate the distribution of exp,\n";
         print "          depending on the current mode. E.g., \"d6\"\n";
-        print "id = exp  Define an identifier.\n"
+        print "id = exp  Define an identifier.\n";
+        print "\nSee index.html for more detailed help.\n"
     )
 
-  fun interpreter(filename: string option) : unit = let
+  fun interpreter(command: string option) : unit = let
 
     val prev_input = ref NONE
     val defns : decl list ref = ref []
@@ -99,12 +100,13 @@ structure Roll = struct
         Declaration (x, e) => (
           defns := (x, e) :: !defns;
           print (x ^ " is defined.\n");
-          mode
+          if mode = INITIAL then EVAL else mode
         )
       | Expression e => 
         let val e2 = subst_defns (!defns) e in
           case mode of 
             EVAL => (eval e2; mode)
+          | INITIAL => (eval e2; QUIT)
           | DIST => (dist e2; mode)
           | SAMPLE => (sample e2; mode)
           | PARSE => (parse e2; mode)
@@ -130,9 +132,28 @@ structure Roll = struct
         readDefns()
       end
 
-    val _ = case filename of
-        NONE => ()
-    |   SOME name => loadFile(name)
+    fun stepMode mode default = case mode of
+      INITIAL => default
+    | _ => mode
+
+    fun doCommand(input, mode) = (
+        prev_input := SOME input;
+        case (String.tokens is_ws input, mode) of
+          ([], _) => mode
+          | (["eval"], _) => (print "Evaluate mode\n"; EVAL)
+          | (["dist"], _) => (print "Distribution mode\n"; DIST)
+          | (["sample"], _) => (print ("Sample mode (" ^ (Int.toString sampleSize) ^ ")\n"); SAMPLE)
+          | (["parse"], _) => (print "Parse mode\n"; PARSE)
+          | (["help"], _) => (helpMessage(); stepMode mode QUIT)
+          | (["quit"], _) => QUIT
+          | (["q"], _) => QUIT
+          | (["load", filename], _) => (loadFile(filename); stepMode mode EVAL)
+          | _ => handleExpr(input, mode)
+    )
+
+    val initial_mode = case command of
+        NONE => EVAL
+    |   SOME str => doCommand(str, INITIAL)
 
     fun interpreterLoop(mode : mode_type) : unit = let
       (* Read input *)
@@ -143,19 +164,8 @@ structure Roll = struct
                     case !prev_input of
                       SOME i => i
                     | NONE => "eval"
-                  else (prev_input := SOME input; input)
-      val new_mode =
-        case (String.tokens is_ws input, mode) of
-          ([], _) => mode
-          | (["eval"], _) => (print "Evaluate mode\n"; EVAL)
-          | (["dist"], _) => (print "Distribution mode\n"; DIST)
-          | (["sample"], _) => (print ("Sample mode (" ^ (Int.toString sampleSize) ^ ")\n"); SAMPLE)
-          | (["parse"], _) => (print "Parse mode\n"; PARSE)
-          | (["help"], _) => (helpMessage(); mode)
-          | (["quit"], _) => QUIT
-          | (["q"], _) => QUIT
-          | (["load", filename], _) => (loadFile(filename); mode)
-          | _ => (handleExpr(input, mode); mode)
+                  else input
+      val new_mode = doCommand(input, mode)
       in
         if new_mode <> QUIT then
           interpreterLoop new_mode
@@ -163,7 +173,10 @@ structure Roll = struct
           ()
       end
   in
-    (print "Roll Interpreter. Type \"help\" for help.\n";
-     interpreterLoop EVAL)
+    if initial_mode <> QUIT
+    then (
+        print "Roll Interpreter. Type \"help\" for help.\n";
+        interpreterLoop initial_mode
+    ) else ()
   end
 end
