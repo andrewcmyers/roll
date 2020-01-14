@@ -7,8 +7,9 @@
 
   <link rel="stylesheet" type="text/css" href="style.css">
   <style>
-    body { font-family: sans-serif }
+    body { font-family: sans-serif; padding: 1em }
     table tr > td:first-child { font-family: Menlo, Courier, fixed; width: 300px }
+    ul > li, p, table tr > td:not(first-child) { max-width: 80ex }
     code { font-family: Menlo, Courier, fixed; font-weight: bold }
     table tr td {vertical-align: top}
   </style>
@@ -16,10 +17,39 @@
 </head>
 <body>
 
-<h1>The Roll Language</h1>
-<p>The Roll language is a functional language.&nbsp; When the
-interpreter (in evaluate mode) reads an expression in Roll, it computes a
-possible value and prints the output.&nbsp; Possible expressions <i
+<h1>Roll</h1>
+<p>
+Roll is an interactive dice language designed to help play games or to conduct
+experiments with probability. Roll is implemented as an interactive
+interpreter. Unlike most similar systems, Roll supports evaluation modes in
+which distributions can be computed exactly or approximated using random
+sampling.
+</p>
+<p>
+<a href="https://github.com/andrewcmyers/roll">The source code</a> is available on Github.
+</p>
+
+<h2>Running Roll</h2>
+
+<p>
+The script <code>roll</code> runs the interpreter inside <code>rlwrap</code> to provide
+history and line editing. An initial expression or command may optionally be provided
+as a command-line argument, e.g.:
+
+<pre>
+<code>roll 3d6</code>
+<code>roll load dnd.roll</code>
+</pre>
+
+<p>
+If the command-line argument is an expression rather than a command, the
+interpreter merely prints the eval-mode result and immediately terminates
+without offering an interactive prompt.
+</p>
+
+<h2>The Roll language</h2>
+
+<p>The dice language is a functional language. Possible expressions <i
 class="math">exp</i> include the following:  </p>
 
 <table>
@@ -33,7 +63,7 @@ class="math">exp</i> include the following:  </p>
   </tr>
   <tr>
     <td><code>d</code> <i class="math"> exp</i> </td>
-    <td><i>d</i> is the fundamental expression in
+    <td><i>d</i> is the most important expression in
     Roll.&nbsp; <code>d</code><i class="math">n</i> means roll an <i
     class="math"> n</i>-sided die and return the result.&nbsp; For example,
     <code>d6</code> evaluates to any of the integers 1&ndash;6.&nbsp; The
@@ -45,16 +75,13 @@ class="math">exp</i> include the following:  </p>
   </tr>
   <tr>
     <td> <i class="math">exp</i>  <code> #</code> <i class="math"> exp</i> </td>
-    <td><i>#</i> is the &quot;<i class="math">n</i>
-    times&quot; operator.&nbsp; The interpreter evaluates the first
-    expression to get an integer <i class="math">n</i>.&nbsp; Then it
-    evaluates the second expression n times and unions the result into a
-    single bag of integers.&nbsp; For example, 3#d6 rolls 3 six-sided dice
-    and returns a bag containing the results.<br><br>
-
-    Evaluation of this expression will always result in bags of integers; it
-    will never result in bags of bags. For example, 3#(2#d6) is equivalent
-    to 6#d6.</td>
+    <td><i>#</i> is the &quot; repeat <i class="math">n</i>
+    times&quot; operator. The interpreter evaluates the first
+    expression to an integer <i class="math">n</i>.&nbsp; Then it
+    evaluates the second expression <i class=math>n</i> times and unions the results into a
+    single bag of integers. For example, the expression <code>3#d6</code> rolls 3 six-sided dice
+    and returns a bag containing the results; the expression <code>3#(2#d6)</code> is equivalent
+    to <code>6#d6</code>.</td>
   </tr>
   <tr>
     <td> <i class="math">exp</i>  <code> +</code> <i class="math">exp</i> </td>
@@ -193,6 +220,10 @@ identifiers:
 <li><code>new char = 6 # sum max 3 in 4#d6</code></li>
 <li><code>plus1 = new char + 1</code>
 </ul>
+<p>
+Each time a definition is used, its expression is evaluated anew, unlike
+identifiers introduced using <code>let</code>.
+</p>
 
 <h2>Modes and Commands</h2>
 
@@ -223,23 +254,6 @@ prompt.
 <li><code>quit</code> or <code>q</code>: quit
 <li><code>load <i>filename</i></code>: load definitions from an external file.
 </ul>
-
-<h2>Running the interpreter</h2>
-
-<p>
-The script <code>roll</code> runs the interpreter inside <code>rlwrap</code> to provide
-history and line editing. An initial expression or command may optionally be provided
-as a command-line argument, e.g.:
-
-<pre>
-<code>roll 3d6</code>
-<code>roll load dnd.roll</code>
-</pre>
-
-<p>
-If the command-line argument is only an expression, the interpreter merely prints
-the result and immediately terminates, rather than offering an interactive prompt.
-</p>
 
 </body>
 </html>
