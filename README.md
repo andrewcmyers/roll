@@ -2,7 +2,7 @@
 
 Web page: [the Roll web page](https://andrewcmyers.github.io/roll/)
 
-Requires: [SML/NJ](https://smlnj.org/)
+Requires: [SML/NJ](https://smlnj.org/) and [rlwrap](https://github.com/hanslub42/rlwrap)
 
 Some sample dice expressions:
 - `d6` : Roll a 6 sided die

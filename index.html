@@ -228,8 +228,17 @@ prompt.
 
 <p>
 The script <code>roll</code> runs the interpreter inside <code>rlwrap</code> to provide
-history and line editing. An initial file of definitions may optionally be provided
-as a command-line argument, as in <code>roll dnd.roll</code>
+history and line editing. An initial expression or command may optionally be provided
+as a command-line argument, e.g.:
+
+<pre>
+<code>roll 3d6<code>
+<code>roll load dnd.roll</code>
+</pre>
+
+<p>
+If the command-line argument is only an expression, the interpreter merely prints
+the result and immediately terminates, rather than offering an interactive prompt.
 </p>
 
 </body>
