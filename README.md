@@ -1,4 +1,6 @@
-Dice language interpreter
+*Roll*: a dice-language interpreter.
+
+Requires: [SML/NJ](https://smlnj.org/)
 
 Some sample dice expressions:
 - `d6` : Roll a 6 sided die
@@ -11,10 +13,12 @@ Some sample dice expressions:
   of rolling 2 d4's.
 - `max 2 (3#d5)` : Return the largest 2 values after
   rolling three five-sided dice.
-- `char = 6#sum max 3 4#d6` : Define `char` to be the result of six trials
-  of the following: roll 4 six-sided dice and sum the 3 largest.
 - `min 2 (3#(if d6 < d6 then 1 else 2))` : Roll
   two dice. If the first is smaller, return 1, else 2. Do this three times
   and select the lowest two values.
 
+Roll also supports definitions, which can be loaded from a file:
 
+- `attribute = 3d6`
+- `char = 6#sum max 3 4#d6` : Define `char` to be the result of six trials
+  of the following: roll 4 six-sided dice and sum the 3 largest.
