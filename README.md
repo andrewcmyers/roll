@@ -24,3 +24,5 @@ Roll also supports definitions, which can be loaded from a file:
 - `twice = 2 # frodo attack` : do `frodo attack` twice
 - `char = 6#sum max 3 4#d6` : Define `char` to be the result of six trials
   of the following: roll 4 six-sided dice and sum the 3 largest.
+
+See [the Roll web page] (https://andrewcmyers.github.io/roll/) for more information.
