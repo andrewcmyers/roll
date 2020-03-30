@@ -41,7 +41,7 @@ open AbSyn
 %left AT
 %nonassoc KW_compare
 %left PLUS MINUS
-%left TIMES DIV
+%left TIMES DIV MOD
 %right HASH
 %nonassoc KW_d
 %nonassoc LPAREN LBRACE ID INT
@@ -82,7 +82,7 @@ Exp : INT                         (Int_e INT)
     | KW_Count Exp                (Count_e Exp)
     | KW_Least Exp KW_in Exp            (Least_e (Exp1, Exp2))
     | KW_Greatest Exp KW_in Exp         (Greatest_e (Exp1, Exp2))
-    | KW_let ID EQUAL Exp KW_in Exp KW_end
+    | KW_let ID EQUAL Exp KW_in Exp
                                   (Let_e (ID, Exp1, Exp2))
     | KW_if Exp Relop Exp KW_then Exp KW_else Exp
                                   (If_e ((Exp1, Relop, Exp2), Exp3, Exp4))

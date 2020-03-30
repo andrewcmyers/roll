@@ -132,12 +132,12 @@ class="math">exp</i> include the following:  </p>
   </tr>
   <tr>
     <td><code>let</code> <i class="math">id</i>=<i class="math">exp</i>
-      <code> in</code> <i class="math"> exp</i>  <code> end</code></td>
+      <code> in</code> <i class="math"> exp</i> </td>
     <td>Binds the result of evaluating the first
     subexpression to the identifier <i class="math">id</i> and uses the
     binding to evaluate the second subexpression.&nbsp; Identifiers start
     with a letter and consist of letters, underscores, and primes.&nbsp;
-    For example, <code>let x = d6 in x+x end</code> will roll a six-sided
+    For example, <code>let x = d6 in x+x</code> will roll a six-sided
     die and double the result.&nbsp; Notice that the d6 in this expression
     is evaluated only once.</td>
   </tr>
@@ -209,7 +209,7 @@ Illegal expressions:
     <li> <code>min 2 in 5</code> : Second argument to min should be a bag.
     <li> <code>min 2 in d5</code> : Second argument to min should be a bag.
     <li> <code>(2#d6) + (2#d6)</code> : Cannot add two bags.
-    <li> <code>let x = d6 in x + y end</code> : Unbound identifier y.
+    <li> <code>let x = d6 in x + y</code> : Unbound identifier y.
 </ul>
 <h2>Definitions</h2>
 <p>
