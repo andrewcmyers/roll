@@ -19,6 +19,7 @@ open AbSyn
     | MINUS
     | TIMES
     | DIV
+    | MOD
     | AT
     | HASH
     | NOTEQUAL | LESSEQUAL | GREATEREQUAL | EQUAL | LESS | GREATER
@@ -74,6 +75,7 @@ Exp : INT                         (Int_e INT)
     | Exp MINUS Exp               (Plus_e (Exp1, Negative_e Exp2))
     | Exp TIMES Exp               (Times_e (Exp1, Exp2))
     | Exp DIV Exp                 (Div_e (Exp1, Exp2))
+    | Exp MOD Exp                 (Mod_e (Exp1, Exp2))
     | Exp AT Exp                  (Union_e (Exp1, Exp2))
     | Exp HASH Exp                (NTimes_e (Exp1, Exp2))
     | KW_Sum Exp                  (Sum_e Exp)

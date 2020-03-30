@@ -59,6 +59,7 @@ INT = [0-9][0-9]*;
 "-" => (Tokens.MINUS (!pos, !pos));
 "*" => (Tokens.TIMES (!pos, !pos));
 "/" => (Tokens.DIV (!pos, !pos));
+"%" => (Tokens.MOD (!pos, !pos));
 "#" => (Tokens.HASH (!pos, !pos));
 "!=" => (Tokens.NOTEQUAL (!pos, !pos));
 "<>" => (Tokens.NOTEQUAL (!pos, !pos));

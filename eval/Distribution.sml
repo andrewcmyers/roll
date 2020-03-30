@@ -280,6 +280,16 @@ structure Distribution :> DISTRIBUTION = struct
                                emptyMset e2',b))
               emptyMset e1'
            end
+       | Mod_e(x,y) =>
+           let
+             val e1' = lift_expr (eval x)
+             val e2' = lift_expr (eval y)
+           in
+             MS.fold (fn (x,b) =>
+              MS.union(MS.fold (fn (y,b) => MS.add(E.eval(Mod_e(x,y)),b) )
+                               emptyMset e2',b))
+              emptyMset e1'
+           end
        | Negative_e(e) =>
 	    let val e' = lift_expr (eval e) in
 	      MS.fold (fn (x,b) =>

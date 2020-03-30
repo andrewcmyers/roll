@@ -139,7 +139,14 @@ structure Evaluator :> EVALUATOR = struct
            (case (eval x, eval y) of
                 (Int_v a, Int_v b) => Int_v(a div b)
               | (Bag_v a, Int_v b) =>
-                  Bag_v(Multiset.fold (fn (x,mset) => Multiset.add (b div x, mset))
+                  Bag_v(Multiset.fold (fn (x,mset) => Multiset.add (x div b, mset))
+                                      (Multiset.empty Int.compare) a)
+              | _ => raise RuntimeError "Cannot divide by a bag")
+       | Mod_e(x,y) =>
+           (case (eval x, eval y) of
+                (Int_v a, Int_v b) => Int_v(a mod b)
+              | (Bag_v a, Int_v b) =>
+                  Bag_v(Multiset.fold (fn (x,mset) => Multiset.add (x mod b, mset))
                                       (Multiset.empty Int.compare) a)
               | _ => raise RuntimeError "Cannot divide by a bag")
        | Compare_e(x,oper,y) =>

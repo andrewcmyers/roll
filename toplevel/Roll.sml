@@ -84,6 +84,7 @@ structure Roll = struct
      | Var_e(id2) => if id2 = id then e1 else Var_e(id2)
      | Negative_e(x) => Negative_e(subst_exp(e1,id,x))
      | Div_e(x,y) => Div_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
+     | Mod_e(x,y) => Mod_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
      | Union_e(x,y) => Union_e(subst_exp(e1,id,x),subst_exp(e1,id,y))
     )
 

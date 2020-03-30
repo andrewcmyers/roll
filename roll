@@ -1,5 +1,7 @@
 #!/bin/sh
-executable=roll.amd64-darwin
+loc=`realpath "$0"`
+d=`dirname "$loc"`
+executable=$d/roll.amd64-darwin
 rlwrap=`which rlwrap`
 if [[ -z "$rlwrap" ]]
 then
