@@ -1,7 +1,14 @@
 #!/bin/sh
 loc=`realpath "$0"`
 d=`dirname "$loc"`
-executable=$d/roll.amd64-darwin
+executable=`find "$d" -name "roll.*" -print`
+if [[ ! -r "${executable}" ]]
+then
+    echo "Can't find executable image roll.* in the same directory as the roll script."
+    echo 'Did you build the SML code using make? See README.md for instructions.'
+    exit 1
+fi
+
 rlwrap=`which rlwrap`
 if [[ -z "$rlwrap" ]]
 then
