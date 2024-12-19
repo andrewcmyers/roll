@@ -1,0 +1,6 @@
+goldo att = d20+7
+new char = 6#sum max 3 in 4#d6
+berkrend att = d20 + 7
+berkrend dmg = d12 + 7
+berkrend adv = max 1 in 2 # berkrend att
+character cost = let c = new char in (sum (c - 8)) + (sum ((filter 13 <= c) - 13))
