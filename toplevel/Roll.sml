@@ -26,7 +26,7 @@ structure Roll = struct
         print "exp       Sample from, estimate, or calculate the distribution of exp,\n";
         print "          depending on the current mode. E.g., \"d6\"\n";
         print "id = exp  Define an identifier.\n";
-        print "\nSee index.html for more detailed help.\n"
+        print "\nSee index.html for detailed help on legal expressions.\n"
     )
 
   fun interpreter(command: string option) : unit = let
